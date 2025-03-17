@@ -458,7 +458,17 @@ class AStarFoodSearchAgent(SearchAgent):
     def __init__(self):
         self.searchFunction = lambda prob: search.aStarSearch(prob, foodHeuristic)
         self.searchType = FoodSearchProblem
-
+class replaceState:
+    def __init__(self, state, walls):
+        self.state = state
+        self.walls = walls
+    
+    def getWalls(self):
+        return self.walls
+    
+    def getPacmanPosition(self):
+        return self.state[0]
+    
 def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -484,9 +494,67 @@ def foodHeuristic(state: Tuple[Tuple, List[List]], problem: FoodSearchProblem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
-
-
+    """
+    尝试暴力求解最短路径，递归爆了
+    """
+    # def mindistance_food(n_pos:tuple,other_pos:List[tuple]):
+    #     hash_tuple = hash((n_pos, tuple(other_pos)))
+    #     if hash_tuple in problem.heuristicInfo:
+    #         return problem.heuristicInfo[hash_tuple]
+    #     elif len(other_pos) <=6:
+    #         max_distance = 0
+    #         for other in other_pos:
+    #             max_distance = max(max_distance,abs(n_pos[0] - other[0]) + abs(n_pos[1] - other[1]))
+    #         return max_distance
+    #     else:
+    #         mindistance = 999999
+    #         for other_food in other_pos:
+    #             new_list = other_pos.copy()
+    #             new_list.remove(other_food)
+    #             mindistance = min(mindistance,(abs(n_pos[0] - other_food[0]) + abs(n_pos[1] - other_food[1]))+mindistance_food(other_food,new_list))
+    #         problem.heuristicInfo[hash_tuple] = mindistance
+    #         return mindistance
+    # foodList = foodGrid.asList()
+    # if len(foodList)==0:
+    #     return 0
+    # else:
+    #     return mindistance_food(position,foodList)
+    """
+    尝试使用最小比最大，加上死角检测
+    """
+    # foodList = foodGrid.asList()
+    # if not foodList:
+    #     return 0
+    # def detect_dead_pos(walls,foods,dict):
+    #     for food in foods:
+    #         x = food[0]
+    #         y = food[1]
+    #         if sum([not walls[nx][ny] for nx, ny in [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]])==1:
+    #             dict[food] = True
+    #         else:
+    #             dict[food] = False
+    # if 'dead_corner' not in problem.heuristicInfo:
+    #     problem.heuristicInfo['dead_corner'] = {}
+    #     detect_dead_pos(problem.walls,foodList,problem.heuristicInfo['dead_corner'])
+    # dead_cnt = 0
+    # for food in foodList:
+    #     if problem.heuristicInfo['dead_corner'][food]:
+    #         dead_cnt+=1
+    # # 计算当前位置到最近食物的距离
+    # min_dist = min(abs(position[0] - food[0]) + abs(position[1] - food[1]) for food in foodList)
+    # # 计算食物之间的最大距离
+    # max_dist = max(abs(food1[0] - food2[0]) + abs(food1[1] - food2[1]) for food1 in foodList for food2 in foodList)
+    # return max(min_dist, max_dist)+dead_cnt*2
+    """
+    尝试使用mazesearch
+    """
+    foodList = foodGrid.asList()
+    if not foodList:
+        return 0
+    distance = 0
+    for food in foodList:
+        distance = max(distance,mazeDistance(position,food,replaceState(state,problem.walls)))
+    return distance
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
     def registerInitialState(self, state):
@@ -517,7 +585,16 @@ class ClosestDotSearchAgent(SearchAgent):
 
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
-
+class new_State:
+    def __init__(self, state, walls):
+        self.state = state
+        self.walls = walls
+    
+    def getWalls(self):
+        return self.walls
+    
+    def getPacmanPosition(self):
+        return self.state
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
     A search problem for finding a path to any food.
@@ -550,10 +627,18 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         complete the problem definition.
         """
         x,y = state
-
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        food_list = self.food.asList()
+        min_distance = 0
+        min_food = (0,0)
+        for food in food_list:
+            now_min_distance = mazeDistance(state,food,new_State(state,self.walls))
+            if now_min_distance<min_distance:
+                min_distance = now_min_distance
+                min_food = food
+            else:
+                pass
+        return min_food
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
     """
     Returns the maze distance between any two points, using the search functions
