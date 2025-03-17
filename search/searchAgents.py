@@ -582,9 +582,19 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
-
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        food_list = food.asList()
+        min_distance = 999999
+        min_food = (0,0)
+        for food in food_list:
+            now_min_distance = mazeDistance(startPosition,food,gameState)
+            if now_min_distance<min_distance:
+                min_distance = now_min_distance
+                min_food = food
+            else:
+                pass
+        problem.goal = min_food
+        return search.aStarSearch(problem,manhattanHeuristic)
 class new_State:
     def __init__(self, state, walls):
         self.state = state
@@ -628,17 +638,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         """
         x,y = state
         "*** YOUR CODE HERE ***"
-        food_list = self.food.asList()
-        min_distance = 0
-        min_food = (0,0)
-        for food in food_list:
-            now_min_distance = mazeDistance(state,food,new_State(state,self.walls))
-            if now_min_distance<min_distance:
-                min_distance = now_min_distance
-                min_food = food
-            else:
-                pass
-        return min_food
+        if state == self.goal:
+            self.food[x][y] = False
+            return True
+        else:
+            return False
 def mazeDistance(point1: Tuple[int, int], point2: Tuple[int, int], gameState: pacman.GameState) -> int:
     """
     Returns the maze distance between any two points, using the search functions
