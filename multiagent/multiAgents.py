@@ -161,7 +161,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             "*** YOUR CODE HERE ***"
             for action in state.getLegalActions(index_of_agent):
                 n_state = state.generateSuccessor(index_of_agent,action)
-                tmp_value,tmp_actions = minimizer(n_state,depth,index_of_agent+1)
+                tmp_value = minimizer(n_state,depth,index_of_agent+1)[0]
                 if value < tmp_value:
                     value = tmp_value
                     maxiAction = action
@@ -181,11 +181,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # for every legal action, update value and miniAction
             "*** YOUR CODE HERE ***"
             for action in state.getLegalActions(index_of_agent):
-                n_state = state.generateSuccessor(index_of_agent,action)
+                n_state = state.generateSuccessor(index_of_agent,action)[0]
                 if index_of_agent+1 == gameState.getNumAgents():
-                    tmp_value,tmp_actions = maximizer(n_state,depth-1,0)
+                    tmp_value = maximizer(n_state,depth-1,0)
                 else:
-                    tmp_value,tmp_actions = minimizer(n_state,depth,index_of_agent+1)
+                    tmp_value = minimizer(n_state,depth,index_of_agent+1)[0]
                 if value > tmp_value:
                     value = tmp_value
                     miniAction = action
@@ -202,7 +202,64 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        def maximizer(state: GameState, depth, index_of_agent, alpha, beta):
+            maxiAction = None
+            #condition for termination of recursive method calls
+            def terminal_condition(state,depth):
+                "*** YOUR CODE HERE ***"
+                if depth == 0 or state.isLose() or state.isWin():
+                    return True
+                else:
+                    return False  
+            if terminal_condition(state,depth) == True:
+                return (self.evaluationFunction(state), None)
+            # initialize value
+            value = -float('inf')
+            # for every legal action, update value, maxiAction and alpha:
+            "*** YOUR CODE HERE ***"
+            for action in state.getLegalActions(index_of_agent):
+                n_state = state.generateSuccessor(index_of_agent,action)
+                tmp_value = minimizer(n_state,depth,index_of_agent+1,alpha,beta)[0]
+                if tmp_value > beta:
+                    return (tmp_value,action)
+                elif value < tmp_value:
+                    value = tmp_value
+                    alpha = max(alpha,tmp_value)
+                    maxiAction = action
+            return (value, maxiAction)
+        
+        def minimizer(state:GameState, depth, index_of_agent, alpha, beta):
+            miniAction = None
+            def terminal_condition(state,depth):
+                "*** YOUR CODE HERE ***"
+                if state.isLose() or state.isWin():
+                    return True
+                else:
+                    return False
+            if terminal_condition(state,depth) == True:
+                return (self.evaluationFunction(state), miniAction)
+            # initialize value
+            value = float('inf')
+            # for every legal action, update value, miniAction and beta
+            "*** YOUR CODE HERE ***"
+            for action in state.getLegalActions(index_of_agent):
+                n_state = state.generateSuccessor(index_of_agent,action)
+                if index_of_agent+1 == gameState.getNumAgents():
+                    tmp_value = maximizer(n_state,depth-1,0,alpha,beta)[0]
+                else:
+                    tmp_value = minimizer(n_state,depth,index_of_agent+1,alpha,beta)[0]
+                if tmp_value < alpha:
+                    return (tmp_value,action)
+                if value > tmp_value:
+                    value = tmp_value
+                    beta = min(beta,tmp_value)
+                    miniAction = action
+            return (value, miniAction)   
+        # initialize alpha/beta
+        alpha =  -float('inf')
+        beta = float('inf')
+        action = maximizer(gameState, self.depth, 0, alpha, beta)[1]
+        return action 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
